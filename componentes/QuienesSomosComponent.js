@@ -2,6 +2,7 @@ import { Component } from 'react';
 import { FlatList, Image, ScrollView, StyleSheet, View } from 'react-native';
 import { Card, Divider, List, Text } from 'react-native-paper';
 import { ACTIVIDADES } from '../comun/actividades';
+import { baseUrl } from '../comun/comun';
 
 function Historia() {
   return (
@@ -38,7 +39,7 @@ class QuienesSomos extends Component {
           descriptionNumberOfLines={0}
           left={(props) => (
             <Image
-              source={require('./imagenes/mendiak.png')}
+              source={{ uri: baseUrl + item.imagen }}
               style={[props.style, styles.image]}
               resizeMode="contain"
             />

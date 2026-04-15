@@ -3,6 +3,7 @@ import { ImageBackground, StyleSheet, View, ScrollView, FlatList } from 'react-n
 import { Card, Text, IconButton } from 'react-native-paper';
 import { EXCURSIONES } from '../comun/excursiones';
 import { COMENTARIOS } from '../comun/comentarios';
+import { baseUrl } from '../comun/comun';
 
 function RenderExcursion(props) {
   const excursion = props.excursion;
@@ -11,7 +12,7 @@ function RenderExcursion(props) {
     return (
       <Card style={styles.card}>
         <ImageBackground
-          source={require('./imagenes/40Años.png')}
+          source={{ uri: baseUrl + excursion.imagen }}
           style={styles.image}
           imageStyle={styles.imageBorder}
         >
@@ -46,16 +47,25 @@ function RenderComentario(props) {
       <Card.Title title="Comentarios" />
       <Card.Content>
         {comentarios.map((item) => {
-          const fecha = new Date(item.fecha).toLocaleString();
+          const fechaCorregida = item.dia.replace(/\s*:\s*/g, ':');
+          const fecha = new Date(fechaCorregida).toLocaleString('es-ES', {
+            weekday: 'long',
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+          });
 
           return (
             <View key={item.id} style={styles.comentarioContainer}>
-              <Text style={styles.comentarioTexto}>{item.texto}</Text>
+              <Text style={styles.comentarioTexto}>{item.comentario}</Text>
               <Text style={styles.comentarioValoracion}>
                 {item.valoracion} estrellas
               </Text>
               <Text style={styles.comentarioAutor}>
-                {item.autor} - {fecha}
+                -- {item.autor}, {fecha}
               </Text>
             </View>
           );
@@ -82,22 +92,22 @@ class DetalleExcursion extends Component {
   }
 
   render() {
-  const { excursionId } = this.props.route.params;
+    const { excursionId } = this.props.route.params;
 
-  return (
-    <ScrollView>
-      <RenderExcursion
-        excursion={this.state.excursiones[+excursionId]}
-        favorita={this.state.favoritos.some((el) => el === +excursionId)}
-        onPress={() => this.marcarFavorito(+excursionId)}
-      />
-      <RenderComentario
-        comentarios={this.state.comentarios.filter(
-          (comentario) => comentario.excursionId === +excursionId
-        )}
-      />
-    </ScrollView>
-  );
+    return (
+      <ScrollView>
+        <RenderExcursion
+          excursion={this.state.excursiones[+excursionId]}
+          favorita={this.state.favoritos.some((el) => el === +excursionId)}
+          onPress={() => this.marcarFavorito(+excursionId)}
+        />
+        <RenderComentario
+          comentarios={this.state.comentarios.filter(
+            (comentario) => comentario.excursionId === +excursionId
+          )}
+        />
+      </ScrollView>
+    );
   }
 }
 
@@ -119,7 +129,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   titulo: {
-    color: 'chocolate',
+    color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -128,18 +138,21 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   comentarioContainer: {
-    marginBottom: 12,
+    marginBottom: 18,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
   },
   comentarioTexto: {
-    fontSize: 14,
-    marginBottom: 4,
+    fontSize: 16,
+    marginBottom: 10,
   },
   comentarioValoracion: {
-    fontSize: 14,
-    marginBottom: 2,
+    fontSize: 15,
+    marginBottom: 6,
   },
   comentarioAutor: {
-    fontSize: 12,
+    fontSize: 14,
     color: 'gray',
   },
 });
