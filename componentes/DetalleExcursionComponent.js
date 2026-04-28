@@ -1,9 +1,11 @@
 import { Component } from 'react';
-import { ImageBackground, StyleSheet, View, ScrollView } from 'react-native';
-import { Card, Text, IconButton } from 'react-native-paper';
+import { ImageBackground, StyleSheet, View, ScrollView, Modal } from 'react-native';
+import { Card, Text, IconButton, TextInput, Button } from 'react-native-paper';
 import { connect } from 'react-redux';
 import { postFavorito } from '../redux/ActionCreators';
+import { postComentario } from '../redux/ActionCreators';
 import { baseUrl } from '../comun/comun';
+import { colorGaztaroaOscuro } from '../comun/comun';
 
 const mapStateToProps = (state) => {
   return {
@@ -15,6 +17,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => ({
   postFavorito: (excursionId) => dispatch(postFavorito(excursionId)),
+  postComentario: (excursionId, valoracion, autor, comentario) =>
+    dispatch(postComentario(excursionId, valoracion, autor, comentario)),
 });
 
 function RenderExcursion(props) {
@@ -39,8 +43,13 @@ function RenderExcursion(props) {
               onPress={() =>
                 props.favorita
                   ? console.log('La excursión ya se encuentra entre las favoritas')
-                  : props.onPress()
+                  : props.onPressFav()
               }
+            />
+            <IconButton
+              icon="pencil"
+              size={28}
+              onPress={() => props.onPressComment()}
             />
           </View>
         </Card.Content>
@@ -88,8 +97,41 @@ function RenderComentario(props) {
 }
 
 class DetalleExcursion extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      valoracion: 5,
+      autor: '',
+      comentario: '',
+      showModal: false,
+    };
+  }
+
   marcarFavorito(excursionId) {
     this.props.postFavorito(excursionId);
+  }
+
+  toggleModal() {
+    this.setState({ showModal: !this.state.showModal });
+  }
+
+  resetForm() {
+    this.setState({
+      valoracion: 5,
+      autor: '',
+      comentario: '',
+      showModal: false,
+    });
+  }
+
+  gestionarComentario(excursionId) {
+    this.props.postComentario(
+      excursionId,
+      this.state.valoracion,
+      this.state.autor,
+      this.state.comentario
+    );
+    this.resetForm();
   }
 
   render() {
@@ -100,13 +142,72 @@ class DetalleExcursion extends Component {
         <RenderExcursion
           excursion={this.props.excursiones.excursiones[+excursionId]}
           favorita={this.props.favoritos.favoritos.some((el) => el === excursionId)}
-          onPress={() => this.marcarFavorito(excursionId)}
+          onPressFav={() => this.marcarFavorito(excursionId)}
+          onPressComment={() => this.toggleModal()}
         />
         <RenderComentario
           comentarios={this.props.comentarios.comentarios.filter(
             (comentario) => comentario.excursionId === +excursionId
           )}
         />
+
+        <Modal
+          animationType="slide"
+          transparent={false}
+          visible={this.state.showModal}
+          onDismiss={() => this.toggleModal()}
+          onRequestClose={() => this.toggleModal()}
+        >
+          <View style={styles.modal}>
+            <Text style={styles.modalTitle}>Añadir comentario</Text>
+
+            <View style={styles.estrellas}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <IconButton
+                  key={star}
+                  icon={star <= this.state.valoracion ? 'star' : 'star-outline'}
+                  size={32}
+                  iconColor={colorGaztaroaOscuro}
+                  onPress={() => this.setState({ valoracion: star })}
+                />
+              ))}
+            </View>
+
+            <TextInput
+              label="Autor"
+              value={this.state.autor}
+              onChangeText={(text) => this.setState({ autor: text })}
+              style={styles.formInput}
+              left={<TextInput.Icon icon="account" />}
+            />
+
+            <TextInput
+              label="Comentario"
+              value={this.state.comentario}
+              onChangeText={(text) => this.setState({ comentario: text })}
+              style={styles.formInput}
+              multiline={true}
+              left={<TextInput.Icon icon="comment-text" />}
+            />
+
+            <View style={styles.modalButtons}>
+              <Button
+                mode="contained"
+                onPress={() => this.gestionarComentario(+excursionId)}
+                style={styles.modalButton}
+              >
+                Enviar
+              </Button>
+              <Button
+                mode="outlined"
+                onPress={() => this.resetForm()}
+                style={styles.modalButton}
+              >
+                Cancelar
+              </Button>
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
     );
   }
@@ -135,7 +236,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   iconoContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 8,
   },
   comentarioContainer: {
@@ -155,6 +258,31 @@ const styles = StyleSheet.create({
   comentarioAutor: {
     fontSize: 14,
     color: 'gray',
+  },
+  modal: {
+    justifyContent: 'center',
+    margin: 20,
+    marginTop: 60,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  estrellas: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  formInput: {
+    marginBottom: 16,
+  },
+  modalButtons: {
+    marginTop: 16,
+  },
+  modalButton: {
+    marginBottom: 12,
   },
 });
 
