@@ -1,8 +1,9 @@
 import { Component } from 'react';
-import { FlatList, Image, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { Card, Divider, List, Text } from 'react-native-paper';
 import { connect } from 'react-redux';
 import { baseUrl } from '../comun/comun';
+import { IndicadorActividad } from './IndicadorActividadComponent';
 
 const mapStateToProps = (state) => {
   return {
@@ -27,31 +28,31 @@ function Historia() {
   );
 }
 
-class QuienesSomos extends Component {
-  renderActividad = ({ item }) => {
-    return (
-      <View>
-        <List.Item
-          title={item.nombre}
-          description={item.descripcion}
-          titleNumberOfLines={0}
-          descriptionNumberOfLines={0}
-          left={(props) => (
-            <Image
-              source={{ uri: baseUrl + item.imagen }}
-              style={[props.style, styles.image]}
-              resizeMode="contain"
-            />
-          )}
-          titleStyle={styles.itemTitle}
-          descriptionStyle={styles.itemDescription}
-          contentStyle={styles.itemContent}
-        />
-        <Divider />
-      </View>
-    );
-  };
+function renderActividadItem({ item }) {
+  return (
+    <View>
+      <List.Item
+        title={item.nombre}
+        description={item.descripcion}
+        titleNumberOfLines={0}
+        descriptionNumberOfLines={0}
+        left={(props) => (
+          <Image
+            source={{ uri: baseUrl + item.imagen }}
+            style={[props.style, styles.image]}
+            resizeMode="contain"
+          />
+        )}
+        titleStyle={styles.itemTitle}
+        descriptionStyle={styles.itemDescription}
+        contentStyle={styles.itemContent}
+      />
+      <Divider />
+    </View>
+  );
+}
 
+class QuienesSomos extends Component {
   render() {
     return (
       <ScrollView>
@@ -59,12 +60,17 @@ class QuienesSomos extends Component {
         <Card style={styles.card}>
           <Card.Title title="Actividades y recursos" titleStyle={styles.cardTitle} />
           <Card.Content>
-            <FlatList
-              data={this.props.actividades.actividades}
-              renderItem={this.renderActividad}
-              keyExtractor={(item) => item.id.toString()}
-              scrollEnabled={false}
-            />
+            {this.props.actividades.isLoading ? (
+              <IndicadorActividad />
+            ) : this.props.actividades.errMess ? (
+              <Text>{this.props.actividades.errMess}</Text>
+            ) : (
+              this.props.actividades.actividades.map((item) => (
+                <View key={item.id}>
+                  {renderActividadItem({ item })}
+                </View>
+              ))
+            )}
           </Card.Content>
         </Card>
       </ScrollView>
